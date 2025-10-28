@@ -1,4 +1,3 @@
----
 
 # 🩺 MediBot Africa – Domain-Specific Healthcare Chatbot
 
