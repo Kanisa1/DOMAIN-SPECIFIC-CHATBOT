@@ -1,138 +1,236 @@
-# 🧠 Domain-Specific Chatbot: Healthcare Question-Answering using FLAN‑T5
+---
 
-## 📘 Project Overview
+# 🩺 MediBot Africa – Domain-Specific Healthcare Chatbot
 
-This project presents a **Healthcare Question-Answering Chatbot** designed to provide accurate, domain-specific medical information. The chatbot leverages **Google’s Flan‑T5 (Base)** Transformer model fine-tuned on a curated medical Q&A dataset. The goal is to assist users in understanding health-related topics such as cancer, diabetes, and heart disease, by delivering concise and reliable responses.
-
-### 🎯 Domain Alignment
-
-The chatbot aligns with the **Healthcare** domain, focusing on improving public access to medically relevant knowledge. Its purpose is to simulate domain-aware conversation and provide accurate educational insights — **not** medical advice — helping users explore conditions, symptoms, and preventive care topics.
+**Owner:** Kanisa Thiak
+**Model:** `microsoft/DialoGPT-medium`
+**Framework:** Hugging Face Transformers + PyTorch
 
 ---
 
-## 🗂️ Dataset Collection & Preprocessing
+## Table of Contents
 
-**Dataset Size:** 16,407 question–answer pairs
-**Sources:** NIH, CDC, Cancer.gov (public domain health repositories)
-
-### Data Preparation
-
-* **Formatting:** Converted to T5-compatible format → `"question: [question] context: [context]"`
-* **Splits:**
-
-  * Train: 13,000 samples
-  * Validation: 1,600 samples
-  * Test: 1,600 samples
-* **Tokenization:** T5Tokenizer (word-piece tokenization)
-* **Preprocessing:**
-
-  * Normalized text (lowercasing, punctuation cleanup)
-  * Removed duplicates and empty samples
-  * Padded sequences dynamically
-
-This ensures clean, structured data optimized for generative question-answering.
+1. [Project Overview](#1-project-overview)
+2. [Dataset Collection and Preprocessing](#2-dataset-collection-and-preprocessing)
+3. [Model Selection and Fine-Tuning](#3-model-selection-and-fine-tuning)
+4. [Performance Metrics and Evaluation](#4-performance-metrics-and-evaluation)
+5. [User Interface Integration](#5-user-interface-integration)
+6. [Code Quality and Documentation](#6-code-quality-and-documentation)
+7. [Challenges and Solutions](#7-challenges-and-solutions)
+8. [Project Setup and Navigation](#8-project-setup-and-navigation)
+9. [Demo and Submission Artifacts](#9-demo-and-submission-artifacts)
+10. [Conclusion and Future Work](#10-conclusion-and-future-work)
+11. [References](#11-references)
 
 ---
 
-## ⚙️ Model Fine‑Tuning
+## 1. 🧠 Project Overview
 
-**Model Used:** Google Flan‑T5 Base (250M parameters)
+**MediBot Africa** is a **domain-specific healthcare chatbot** developed to provide **accurate, accessible, and contextually relevant medical information** to users across Africa.
 
-### Training Configuration
+Built on **Transformer-based models**, the chatbot delivers **safe, coherent responses** regarding common illnesses, symptoms, treatments, and preventive measures.
 
-| Parameter     | Value                                   |
-| ------------- | --------------------------------------- |
-| Learning Rate | 3e‑4                                    |
-| Batch Size    | 8                                       |
-| Epochs        | 3                                       |
-| Warmup Steps  | 500                                     |
-| Optimizer     | AdamW                                   |
-| Framework     | PyTorch (via Hugging Face Transformers) |
+### Domain Relevance
 
-### Experiments
+Healthcare was selected for its **social and humanitarian impact**. Challenges in African communities include:
 
-Several hyperparameter trials were conducted, adjusting learning rate and epochs. The final configuration improved validation performance by **~12%** over the baseline. Models were saved as:
+* Widespread misinformation about medical conditions
+* Limited healthcare infrastructure
+* Low digital health literacy
 
-* `best_healthcare_t5/` → Best-performing checkpoint
-* `final_healthcare_t5/` → Final trained model
+MediBot Africa contributes to **UN SDG 3 – Good Health and Well-being**, providing **reliable digital medical guidance**.
 
 ---
 
-## 📊 Evaluation Metrics & Results
+## 2. 🩸 Dataset Collection and Preprocessing
 
-Evaluation combined **quantitative** and **qualitative** analysis.
+### Dataset Description
+
+A **custom conversational dataset** (`medibot_dataset.json`) was curated to reflect **realistic African healthcare scenarios**, including dialogues about:
+
+* Malaria
+* Typhoid
+* Fever
+* Pneumonia
+* Vaccination awareness
+
+### Preprocessing Steps
+
+1. **Text normalization:** Lowercasing, punctuation cleanup
+2. **Noise removal:** Excluding incomplete or irrelevant dialogues
+3. **Handling missing values:** Dropping null or empty entries
+4. **Tokenization:** Using `AutoTokenizer` (max length = 512)
+5. **Formatting:** Structured into JSON and loaded via Pandas
+
+**Result:** A **clean, balanced dataset** optimized for Transformer fine-tuning.
+
+---
+
+## 3. ⚙️ Model Selection and Fine-Tuning
+
+### Model Iteration
+
+| Model               | Observation                                   | Outcome     |
+| ------------------- | --------------------------------------------- | ----------- |
+| **T5-Small**        | Efficient but hallucinated medical facts      | ❌ Rejected  |
+| **T5-Base**         | Improved fluency, still prone to errors       | ⚠️ Moderate |
+| **DialoGPT-Medium** | Contextually rich, stable dialogue generation | ✅ Selected  |
+
+### Fine-Tuning Configuration
+
+| Hyperparameter      | Value                       |
+| ------------------- | --------------------------- |
+| Model               | `microsoft/DialoGPT-medium` |
+| Learning Rate       | 5e-5                        |
+| Batch Size          | 4                           |
+| Epochs              | 3                           |
+| Max Sequence Length | 512                         |
+
+**Training Highlights:** GPU acceleration, dynamic padding, attention masking, checkpoint saving.
+
+### Key Observations
+
+* Reduced hallucinations compared to T5 models
+* Improved context retention and dialogue coherence
+* Validation loss steadily decreased, confirming stable training
+
+---
+
+## 4. 📊 Performance Metrics and Evaluation
 
 ### Quantitative Metrics
 
-| Metric      | Description                | Result                         |
-| ----------- | -------------------------- | ------------------------------ |
-| **BLEU**    | Translation quality metric | ✓ Moderate fluency improvement |
-| **ROUGE‑1** | Unigram overlap            | ✓ Strong recall                |
-| **ROUGE‑2** | Bigram overlap             | ✓ Moderate coherence           |
-| **ROUGE‑L** | Longest common subsequence | ✓ Consistent structure         |
+| Metric     | Result | Interpretation                         |
+| ---------- | ------ | -------------------------------------- |
+| BLEU Score | 0.1706 | Moderate alignment with reference text |
+| ROUGE-1    | 0.3301 | Good lexical overlap                   |
+| ROUGE-2    | 0.3205 | Strong phrase-level relevance          |
+| ROUGE-L    | 0.3337 | Structural similarity                  |
+| F1-Score   | 0.62   | Balanced precision and recall          |
+| Perplexity | 18.7   | Low uncertainty, fluent generation     |
 
-### Qualitative Testing
+### Qualitative Evaluation
 
-* Compared model predictions with gold-standard answers.
-* Observed strong generalization within healthcare queries.
-* Out-of-domain prompts are rejected gracefully.
+* Accurate responses to domain-specific medical queries
+* Rejection of unsafe or unrelated questions
+* Natural, human-like conversational flow
 
 ---
 
-## 💬 User Interface (UI)
+## 5. 💬 User Interface Integration
 
-**Framework:** Gradio / Streamlit
+### Interface Design
 
-### Features
+* **Gradio-based web app** for real-time interaction
+* **Responsive layout** for desktop and mobile
+* Text input for queries and dynamic chatbot responses
+* Deployed on **Hugging Face Spaces** for public access
 
-* Simple text input box for user queries.
-* Real-time model-generated responses.
-* Clear output section for chatbot replies.
-* User guidance and disclaimer visible within the app.
+---
 
-### Running the Interface
+## 6. 🧩 Code Quality and Documentation
+
+* **Modular structure:** Separate sections for configuration, preprocessing, training, and evaluation
+* **Readable code:** Clear naming conventions and detailed comments
+* **Version control:** Git + Hugging Face synchronization
+* **Reproducibility:** All parameters, datasets, and checkpoints documented
+
+---
+
+## 7. 🧠 Challenges and Solutions
+
+| Challenge                   | Description                           | Solution                                             |
+| --------------------------- | ------------------------------------- | ---------------------------------------------------- |
+| Model hallucination         | T5 models generated off-topic answers | Switched to DialoGPT with optimized learning rate    |
+| Hugging Face hosting limits | Model size >1GB                       | Split model and interface into separate repositories |
+| GitHub push limits          | Checkpoints exceeded file size cap    | Linked external model repo                           |
+| W&B integration             | Dependency conflicts                  | Deferred integration post-stabilization              |
+| Perplexity computation      | GPU memory overflow                   | Adopted batch evaluation + gradient checkpointing    |
+
+---
+
+## 8. 🛠️ Project Setup and Navigation
+
+### Prerequisites
+
+* Python 3.9+
+* PyTorch 2.x
+* Hugging Face Transformers 5.x
+* Gradio 3.x
+
+### Installation
 
 ```bash
-# Run Streamlit app
-streamlit run app.py
+# Clone repository
+git clone https://github.com/Kanisa12/medibot-africa.git
+cd medibot-africa
 
-# OR Run Gradio demo
-python chatbot_interface.py
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+venv\Scripts\activate     # Windows
+
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-Once launched, users can type any health-related question (e.g., *“What are the symptoms of diabetes?”*) and receive a concise, model-generated explanation.
+### Running the Chatbot
+
+```bash
+# Launch Gradio interface
+python chat.py
+```
+
+### Project Structure
+
+```
+medibot-africa/
+├── data/                  # Dataset files
+│   └── medibot_dataset.json
+├── notebooks/             # Jupyter notebooks for experimentation
+│   └── chat.ipynb
+├── models/                # Trained model checkpoints
+├── scripts/               # Preprocessing and training scripts
+├── chat.py                # Entry point for Gradio UI
+├── requirements.txt       # Python dependencies
+└── README.md
+```
 
 ---
 
-## 🧩 Code Quality & Organization
+## 9. 🎥 Demo and Submission Artifacts
 
-The notebook follows modular, readable structure:
-
-1. **Setup:** Environment initialization and dependencies.
-2. **Data Preparation:** Loading, preprocessing, and formatting.
-3. **Model Fine-tuning:** Training loop and saving checkpoints.
-4. **Evaluation:** Metric computation and error analysis.
-5. **Deployment:** Gradio/Streamlit chatbot interface.
-
-All functions include inline documentation, clear variable naming, and cell-level comments for reproducibility.
+* **Demo Video:** [YouTube Link](https://youtu.be/XGkV0HVm7xs?si=AE9sR9_YTDEG7Z0g)
+* **Model Repository:** [Hugging Face – Kanisa12/medibot-africa](https://huggingface.co/Kanisa12/medibot-africa)
+* **Interface Repository:** [Hugging Face – MediBot Interface](#)
 
 ---
 
-## 🎥 Demo Video & Repository
+## 10. 🏁 Conclusion and Future Work
 
-* **GitHub Repository:** [🔗 *Add your repo link here*](https://github.com/yourusername/healthcare-chatbot)
-* **Demo Video (5–10 mins):** [🎥 *Add your video link here*](https://youtu.be/your-demo-link)
+**MediBot Africa** demonstrates that **Transformer-based dialogue models** can improve healthcare education and awareness in Africa.
 
----
+### Future Enhancements
 
-## 🧾 Key Insights
-
-* Flan‑T5 proved effective for **domain‑specific generative QA**, producing context-aware answers.
-* Robust preprocessing significantly improved fluency and factual accuracy.
-* The chatbot performed best on structured health information and showed resilience to ambiguous or unrelated queries.
+* Expand dataset with **multilingual support** (English, Swahili, Arabic)
+* Integrate **real-time F1-score tracking** and **Weights & Biases logging**
+* Deploy as a **RESTful API** for mobile apps
+* Improve **model explainability** for transparent medical insights
 
 ---
 
-## 🏁 Conclusion
+## 11. 🔗 References
 
-This project successfully implemented a **Transformer-based Healthcare Chatbot** capable of handling complex medical queries through fine‑tuning of the Flan‑T5 model. It demonstrates strong domain adaptation, reliable evaluation metrics, and an intuitive user interface — meeting all performance and usability goals outlined in the assignment rubric.
+1. Hugging Face, *Transformers Documentation*, 2024 — [https://huggingface.co/docs/transformers](https://huggingface.co/docs/transformers)
+2. Paszke, A. et al., *PyTorch: An Imperative Style, High-Performance Deep Learning Library*, NeurIPS 2019 — [https://pytorch.org](https://pytorch.org)
+3. TensorFlow Team, *TensorFlow: Large-Scale Machine Learning on Heterogeneous Systems*, 2015 — [https://tensorflow.org](https://tensorflow.org)
+4. Papineni, K. et al., *BLEU: A Method for Automatic Evaluation of Machine Translation*, ACL 2002 — [https://aclanthology.org/P02-1040](https://aclanthology.org/P02-1040)
+5. Lin, C.-Y., *ROUGE: A Package for Automatic Evaluation of Summaries*, ACL Workshop 2004 — [https://aclanthology.org/W04-1013](https://aclanthology.org/W04-1013)
+6. Microsoft, *DialoGPT: Large-Scale Generative Pre-training for Conversational Response Generation*, 2020 — [https://huggingface.co/microsoft/DialoGPT-medium](https://huggingface.co/microsoft/DialoGPT-medium)
+7. Raffel, C. et al., *Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer (T5)*, JMLR, 2020
+
+---
+
+### 🩷 *“MediBot Africa – Empowering Health Through AI Conversations.”*
+
+---
